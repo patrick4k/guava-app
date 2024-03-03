@@ -1,4 +1,12 @@
+use pest::Parser;
+use pest_derive::Parser;
+
+#[derive(Parser)]
+#[grammar = "./grammar/guava.pest"]
+pub struct GuaveParser;
+
 pub fn add(left: usize, right: usize) -> usize {
+    let p = GuaveParser::parse(Rule::code, "").unwrap();
     left + right
 }
 
