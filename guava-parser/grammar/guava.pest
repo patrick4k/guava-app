@@ -52,16 +52,16 @@ WHITESPACE = _{ " " | "\t" }
 COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* }
 
 DOUBLE = @{ INT ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ INT)? }
-INT = @{ ("+" | "-")? ~ ASCII_DIGIT+ }
+INT = @{ ASCII_DIGIT+ }
 STRING = @{
-      ASCII_ALPHA ~ "\"" ~ ANY* ~ "\""
+      ASCII_ALPHA? ~ "\"" ~ (!"\"" ~ ANY)* ~ "\""
     | "'" ~ ANY* ~ "'"
 }
 
 code = {SOI ~ nl* ~ (line ~ nl+)* ~ line? ~ nl* ~ EOI}
 line = { statement | expr }
 
-statement = { decltype | declvar | encapsScope }
+statement = { declvar | encapsScope | decltype }
 decltype = { (COMPILER_TAG ~ Nl*)* ~ identifier ~ identifier+ ~ Nl* ~ encapsExpr? ~ (Nl? ~ expr | Nl* ~ encapsScope) }
 declvar = { LET ~ expr }
 
@@ -95,8 +95,8 @@ tuples = { ((tuple ~ nl)* ~ tuple ~ Nl*)? }
 atom = {
       identifier
     | COMPILER_ID
-    | DOUBLE
     | INT
+    | DOUBLE
     | STRING
     | parenexpr
 }

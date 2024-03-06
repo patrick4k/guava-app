@@ -1,4 +1,5 @@
-mod util;
+extern crate guava_util;
+
 mod decltype;
 mod declvar;
 mod line;
@@ -6,6 +7,9 @@ mod expr;
 mod atom;
 mod identifier;
 mod encaps_expr;
+mod encaps_scope;
+mod tuples;
+mod tuple;
 mod ast;
 
 use pest::iterators::Pair;
@@ -25,28 +29,15 @@ pub trait FromCapture<'a> {
 }
 
 pub fn parse(s: &str) -> Code {
-    parse_code(s)
-}
-
-struct CodeAst<'a> {
-    pub declarations: Vec<Capture<'a>>,
-    pub instructions: Vec<Capture<'a>>
-}
-
-enum LineAst<'a> {
-    Instruction(Capture<'a>),
-    Declaration(Capture<'a>)
-}
-
-enum Instruction<'a> {
-    Rule(Capture<'a>),
-    ScopeIn,
-    ScopeOut
+    println!("Starting Parsing!");
+    let code = parse_code(s);
+    println!("Finished Parsing!");
+    code
 }
 
 fn parse_code(s: &str) -> Code {
-    let mut declarations: Vec<Capture> = vec![];
-    let mut instructions: Vec<Capture> = vec![];
+    let mut declarations: Vec<DeclType> = vec![];
+    let mut instructions: Vec<Line> = vec![];
 
     let code_parse_result = GuavaParser::parse(Rule::code, s);
     match code_parse_result {
@@ -58,38 +49,42 @@ fn parse_code(s: &str) -> Code {
     for line in code {
         match line.as_rule() {
             Rule::line => {
-                let line_ast = parse_line(line);
-                match line_ast {
-                    LineAst::Instruction(inst) => instructions.push(inst),
-                    LineAst::Declaration(decl) => declarations.push(decl)
+                let line_of_code = parse_line(line);
+                match line_of_code {
+                    LineOfCode::Line(inst) => instructions.push(inst),
+                    LineOfCode::DeclType(decl) => declarations.push(decl)
                 }
             },
             _ => {}
         }
     }
 
-    let declarations: Vec<DeclType> = declarations.into_iter().map(DeclType::from_cap).collect();
-    let instructions: Vec<Line> = instructions.into_iter().map(Line::from_cap).collect();
-
-    todo!("Create Code AST")
+    Code {
+        declarations,
+        instructions
+    }
 }
 
-fn parse_line(line: Capture) -> LineAst {
-    let mut lines = line.into_inner();
-    let line = lines.next().unwrap();
+enum LineOfCode {
+    DeclType(DeclType),
+    Line(Line)
+}
+
+fn parse_line(line: Capture) -> LineOfCode {
+    let mut line = line.into_inner().next().unwrap();
     match line.as_rule() {
         Rule::statement => {
-            let decl = line.into_inner().next().unwrap();
-            match decl.as_rule() {
-                Rule::decltype => return LineAst::Declaration(decl),
-                _ => return LineAst::Instruction(decl)
+
+            line = line.into_inner().next().unwrap();
+            match line.as_rule() {
+                Rule::decltype => return LineOfCode::DeclType(DeclType::from_cap(line)),
+                _ => {}
             }
         }
-        Rule::expr => {
-            return LineAst::Instruction(line);
-        }
+        Rule::expr => {}
         _ => panic!("Unexpected capture!")
     }
+    LineOfCode::Line(Line::from_cap(line))
 }
 
 #[cfg(test)]

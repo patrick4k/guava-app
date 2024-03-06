@@ -67,9 +67,14 @@ dependencies = [
 name = "guava-parser"
 version = "0.1.0"
 dependencies = [
+ "guava-util",
  "pest",
  "pest_derive",
 ]
+
+[[package]]
+name = "guava-util"
+version = "0.1.0"
 
 [[package]]
 name = "libc"

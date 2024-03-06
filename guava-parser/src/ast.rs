@@ -25,9 +25,11 @@ pub enum Identifier {
 
 pub enum Line {
     DeclVar(DeclVar),
-    Scope(Vec<Line>),
+    Scope(EncapsScope),
     Expr(Expr)
 }
+
+pub type EncapsScope = Vec<Line>;
 
 pub enum ExprItem {
     Op(String),
@@ -51,7 +53,10 @@ pub enum EncapsType {
     Paren
 }
 
+pub type Tuple = Vec<Expr>;
+pub type Tuples = Vec<Tuple>;
+
 pub struct EncapsExpr {
     pub encaps_type: EncapsType,
-    pub values: Vec<Vec<Expr>>
+    pub values: Tuples
 }
