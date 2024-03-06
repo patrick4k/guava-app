@@ -44,7 +44,7 @@ CLOSE_PAREN = @{ ")" }
 
 ID = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 COMPILER_ID = @{ "$" ~ ID }
-COMPILER_TAG = @{ "@" ~ ANY* ~ Nl }
+COMPILER_TAG = @{ "@" ~ (!NEWLINE ~ ANY)* ~ Nl }
 Nl = { COMMENT? ~ NEWLINE }
 nl = { Nl | SEMICOLON }
 
@@ -61,34 +61,32 @@ STRING = @{
 code = {SOI ~ nl* ~ (line ~ nl+)* ~ line? ~ nl* ~ EOI}
 line = { statement | expr }
 
-statement = { decltype | declvar }
-decltype = { (COMPILER_TAG ~ Nl*)* ~ identifier+ ~ identifier ~ Nl* ~ encapsExpr? ~ (Nl? ~ expr | Nl* ~ encapsScope) }
-declvar = { LET ~ ID ~ expr }
+statement = { decltype | declvar | encapsScope }
+decltype = { (COMPILER_TAG ~ Nl*)* ~ identifier ~ identifier+ ~ Nl* ~ encapsExpr? ~ (Nl? ~ expr | Nl* ~ encapsScope) }
+declvar = { LET ~ expr }
 
-expr = {
-      atom
-    | parenexpr
-    | opprefix
-    | opsuffix
-    | opbinary
-    | exprEncapsExpr
+expr = { (op* ~ atom ~ op+)* ~ op* ~ atom ~ exprTail*}
+
+exprTail = {
+      op
+    | Nl* ~ (encapsExpr|encapsScope)
 }
-parenexpr = { OPEN_PAREN ~ Nl* ~ expr ~ Nl* ~ CLOSE_PAREN }
+
 opprefix = {op ~ expr}
 opsuffix = {expr ~ op}
 opbinary = {expr ~ op ~ expr}
 exprEncapsExpr = {expr ~ Nl* ~ (encapsExpr|encapsScope)}
 
-identifier = {
-      ID
-    | opidentifier
-}
-opidentifier = {OPREFSYMBOL ~ op}
-templateidentifier = {identifier ~ Nl* ~ OPEN_TRI ~ Nl* ~ (expr ~ Nl* ~ COMMA ~ Nl*)* ~ expr ~ Nl* ~ CLOSE_TRI}
+identifier = { ID | OPREFSYMBOL ~ op | templateidentifier }
+templateidentifier = {(ID | OPREFSYMBOL ~ op) ~ Nl* ~ OPEN_TRI ~ Nl* ~ (expr ~ Nl* ~ COMMA ~ Nl*)* ~ expr ~ Nl* ~ CLOSE_TRI}
 
 encapsScope = { OPEN_BRACE ~ Nl* ~ (line ~ nl+)* ~ Nl* ~ CLOSE_BRACE }
 
-encapsExpr = { PUSH(OPEN_BRACE | OPEN_PAREN | OPEN_BRACK) ~ Nl* ~ tuples ~ Nl* ~ POP }
+encapsExpr = {
+      OPEN_PAREN ~ Nl* ~ tuples ~ Nl* ~ CLOSE_PAREN
+    | OPEN_BRACE ~ Nl* ~ tuples ~ Nl* ~ CLOSE_BRACE
+    | OPEN_BRACK ~ Nl* ~ tuples ~ Nl* ~ CLOSE_BRACK
+}
 
 tuple = { (expr ~ Nl* ~ COMMA ~ Nl*)* ~ expr ~ Nl* }
 
@@ -100,4 +98,7 @@ atom = {
     | DOUBLE
     | INT
     | STRING
+    | parenexpr
 }
+
+parenexpr = { OPEN_PAREN ~ Nl* ~ expr ~ Nl* ~ CLOSE_PAREN }

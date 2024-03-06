@@ -1,4 +1,4 @@
-grammar test;
+grammar guava;
 
 fragment OpSymbol
 : 'while'
@@ -61,21 +61,32 @@ identifier
 | identifier Nl* '<' Nl* (expr Nl* Comma Nl*)* expr '>' Nl*
 ;
 
-compilerTag: CompilerTag expr? Nl+;
+compilerTag: CompilerTag .*? Nl;
 
 statement
-: /*tag*/compilerTag* /*type*/identifier+ /*name*/identifier Nl* /*args*/encapsExpr?  /*body*/(Nl? expr | Nl* encapsScope) #decltype
+: /*tag*/(compilerTag Nl*)* /*type*/identifier+ /*name*/identifier Nl* /*args*/encapsExpr?  /*body*/(Nl? expr | Nl* encapsScope) #decltype
 | /*tag*/compilerTag* /*type*/identifier+ /*name*/OpRefPrefix Op Nl* /*args*/encapsExpr?  /*body*/(Nl? expr | Nl* encapsScope) #declop
 | Let /*options*/Id* /*init*/expr #declvar
+| encapsScope #encapsScopeStatement
 ;
 
+//expr
+//: Op expr #prefix
+////| expr Op #suffix
+//| expr Op expr #binary
+//| OpenParen Nl* expr Nl* CloseParen #parenExpr
+////| expr Nl* (encapsExpr|encapsScope) #exprEncapsExpr
+//| atom exprTail #tailExpr
+//| atom #atomexpr
+//;
+
 expr
-: Op expr #prefix
-| expr Op #suffix
-| expr Op expr #binary
-| OpenParen Nl* expr Nl* CloseParen #parenExpr
-| expr Nl* (encapsExpr|encapsScope) #exprEncapsExpr
-| atom #atomexpr
+: (Op* atom Op* Op+)* Op* atom exprTail*
+;
+
+exprTail
+: Op
+| Nl* (encapsExpr|encapsScope)
 ;
 
 encapsScope
@@ -99,4 +110,5 @@ atom
 | Int
 | Double
 | String
+| OpenParen Nl* expr Nl* CloseParen
 ;
