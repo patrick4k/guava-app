@@ -1,3 +1,4 @@
+workspace = { members = ["guava-ir"] }
 [package]
 name = "guava-app"
 version = "0.1.0"
@@ -7,3 +8,5 @@ edition = "2021"
 
 [dependencies]
 guava-parser = { path = "guava-parser" }
+guava-ir = { path = "guava-ir" }
+clap = { version = "4.5.2", features = ["derive"] }

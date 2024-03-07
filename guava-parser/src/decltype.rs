@@ -1,4 +1,6 @@
 use std::borrow::Borrow;
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 use crate::Capture;
 use crate::ast::*;
 use crate::FromCapture;

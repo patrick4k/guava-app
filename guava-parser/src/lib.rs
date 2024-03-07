@@ -10,7 +10,8 @@ mod encaps_expr;
 mod encaps_scope;
 mod tuples;
 mod tuple;
-mod ast;
+
+pub mod ast;
 
 use pest::iterators::Pair;
 use pest::Parser;
@@ -29,10 +30,7 @@ pub trait FromCapture<'a> {
 }
 
 pub fn parse(s: &str) -> Code {
-    println!("Starting Parsing!");
-    let code = parse_code(s);
-    println!("Finished Parsing!");
-    code
+    parse_code(s)
 }
 
 fn parse_code(s: &str) -> Code {
